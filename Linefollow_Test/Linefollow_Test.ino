@@ -1,26 +1,29 @@
 #define TIMER_INTERRUPT_DEBUG         0
 #define _TIMERINTERRUPT_LOGLEVEL_     0
 
-#define USE_TIMER_1     true
+#define USE_TIMER_2     true
 
-#define ENA 6
-#define ENB 5
-#define IN1 10
-#define IN2 11
-#define IN3 12
-#define IN4 13
+#define TURN_SPEED 190
+#define FORWARD_SPEED 255
+
+#define ENA 5
+#define ENB 6
+#define IN1 12
+#define IN2 13
+#define IN3 8
+#define IN4 9
 
 #define SPEEDPIN A0
-#define BUTTONPIN 3
-#define RIGHTBUMPER 8
-#define LEFTBUMPER 9
+#define BUTTONPIN 2
+#define RIGHTBUMPER 4
+#define LEFTBUMPER 3
 
-#define LEFTNOTINSYNC 1
+#define LEFTNOTINSYNC 0
 #define RIGHTNOTINSYNC 0
 
-#define IRIN_RIGHT A4
-#define IRIN_MIDDLE A5
-#define IRIN_LEFT A3
+#define IRIN_RIGHT A1
+#define IRIN_MIDDLE A3
+#define IRIN_LEFT A2
 
 #define LEFT_THRESH 500
 #define MIDDLE_THRESH 500
@@ -30,14 +33,19 @@
 
 int inp;
 int outp;
+int no_trans = 0;
 
 typedef enum {
-  LEFT, RIGHT, FORWARD, STOP
+  LEFT, RIGHT, FORWARD, OFF_LINE, STOP, OFF_LINE_TRANS
 } States_t;
 States_t state;
 
+void del() {
+  no_trans = 0;
+}
+
 void setup() {
-  ITimer1.init();
+  ITimer2.init();
   pinMode(ENA, OUTPUT);
   pinMode(ENB, OUTPUT);
   pinMode(IN1, OUTPUT);
@@ -106,34 +114,62 @@ void checkforbumper() {
 }
 
 void trans_forward() {
-  state = FORWARD;
-  inp = analogRead(SPEEDPIN);
-  outp = map(inp, 0, 1024, 0, 255);
-  setleftmotorspeed(outp);
-  setrightmotorspeed(outp);
+  if (!no_trans) {
+    state = FORWARD;
+    //inp = analogRead(SPEEDPIN);
+    //outp = map(inp, 0, 1024, 0, 255);
+    setleftmotorspeed(FORWARD_SPEED);
+    setrightmotorspeed(FORWARD_SPEED);
+  }
+}
+
+void trans_stop() {
+  if (!no_trans) {
+    state = STOP;
+    setleftmotorspeed(0);
+    setrightmotorspeed(0);
+  }
 }
 
 void trans_right() {
-  state = RIGHT;
-  inp = analogRead(SPEEDPIN);
-  outp = map(inp, 0, 1024, -255, 255);
-  setleftmotorspeed(-outp);
-  setrightmotorspeed(outp);
+  if (!no_trans) {
+    state = RIGHT;
+    //inp = analogRead(SPEEDPIN);
+    //outp = map(inp, 0, 1024, -255, 255);
+    setleftmotorspeed(TURN_SPEED);
+    setrightmotorspeed(-TURN_SPEED);
+  }
 }
 
 void trans_left() {
-  state = LEFT;
-  inp = analogRead(SPEEDPIN);
-  outp = map(inp, 0, 1024, -255, 255);
-  setleftmotorspeed(outp);
-  setrightmotorspeed(-outp);
+  if (!no_trans) {
+    state = LEFT;
+    //inp = analogRead(SPEEDPIN);
+    //outp = map(inp, 0, 1024, -255, 255);
+    setleftmotorspeed(-TURN_SPEED);
+    setrightmotorspeed(TURN_SPEED);
+  }
+}
+
+void trans_offline() {
+  if (!no_trans) {
+    trans_stop();
+    state = OFF_LINE;
+    ITimer2.setInterval(200, del, 201);
+    no_trans = 1;
+  }
 }
 
 void loop() {
   switch (state) {
     case FORWARD:
       if (analogRead(IRIN_RIGHT) > RIGHT_THRESH) {
-        trans_right();
+        if (analogRead(IRIN_LEFT) > LEFT_THRESH) {
+          trans_offline();
+        }
+        else {
+          trans_right();
+        }
       }
       if (analogRead(IRIN_LEFT) > LEFT_THRESH) {
         trans_left();
@@ -141,13 +177,26 @@ void loop() {
       break;
     case LEFT:
       if (analogRead(IRIN_MIDDLE) > MIDDLE_THRESH) {
-        trans_forward();
+        if (analogRead(IRIN_LEFT) > LEFT_THRESH) {
+          trans_offline();
+        }
+        else{
+          trans_forward();
+        }
       }
       break;
     case RIGHT:
       if (analogRead(IRIN_MIDDLE) > MIDDLE_THRESH) {
-        trans_forward();
+        if (analogRead(IRIN_RIGHT) > RIGHT_THRESH) {
+          trans_offline();
+        }
+        else{
+          trans_forward();
+        }
       }
       break;
+    case OFF_LINE_TRANS:
+      break;
   }
+
 }

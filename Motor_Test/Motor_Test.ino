@@ -2,20 +2,21 @@
 #define _TIMERINTERRUPT_LOGLEVEL_     0
 
 #define USE_TIMER_1     true
+#define USE_TIMER_2     true
 
-#define ENA 6
-#define ENB 5
-#define IN1 10
-#define IN2 11
-#define IN3 12
-#define IN4 13
+#define ENA 5
+#define ENB 6
+#define IN1 12
+#define IN2 13
+#define IN3 8
+#define IN4 9
 
 #define SPEEDPIN A0
-#define BUTTONPIN 3
-#define RIGHTBUMPER 8
-#define LEFTBUMPER 9
+#define BUTTONPIN 2
+#define RIGHTBUMPER 4
+#define LEFTBUMPER 3
 
-#define LEFTNOTINSYNC 1
+#define LEFTNOTINSYNC 0
 #define RIGHTNOTINSYNC 0
 
 #include <TimerInterrupt.h>         //https://github.com/khoih-prog/TimerInterrupt
@@ -105,19 +106,19 @@ void loop() {
   if (digitalRead(RIGHTBUMPER) && digitalRead(LEFTBUMPER) && !pushed) {
     pushed = 1;
     bouncing = 1;
-    ITimer1.setInterval(1500, debounce, 1501);
+    ITimer2.setInterval(1500, debounce, 1501);
     setleftmotorspeed(-outp*pushed2);
-    //setrightmotorspeed(-outp*pushed2);
+    setrightmotorspeed(-outp*pushed2);
   }
   if (!digitalRead(RIGHTBUMPER) && !digitalRead(LEFTBUMPER) && !bouncing && pushed) {
     pushed = 0;
     setleftmotorspeed(outp*pushed2);
-    //setrightmotorspeed(outp*pushed2);
+    setrightmotorspeed(outp*pushed2);
   }
   if (digitalRead(BUTTONPIN) && !bouncing2) {
     pushed2 = 1^pushed2;
     setleftmotorspeed(outp*pushed2);
-    //setrightmotorspeed(outp*pushed2);
+    setrightmotorspeed(outp*pushed2);
     bouncing2 = 1;
     ITimer1.setInterval(500, debounce2, 501);
   }

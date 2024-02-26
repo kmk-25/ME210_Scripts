@@ -5,10 +5,9 @@
 
 #include <TimerInterrupt.h>         //https://github.com/khoih-prog/TimerInterrupt
 
-#define IRIN_RIGHT A4
-#define IRIN_MIDDLE A5
-#define IRIN_LEFT A3
-#define SERVO_PIN_A 7
+#define IRIN_RIGHT A1
+#define IRIN_MIDDLE A3
+#define IRIN_LEFT A2
 
 void setup() {
   // put your setup code here, to run once:
