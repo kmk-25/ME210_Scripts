@@ -3,8 +3,10 @@
 
 #define USE_TIMER_2     true
 
-#define TURN_SPEED 190
-#define FORWARD_SPEED 255
+#define TURN_SPEED_SLOW 185
+#define FORWARD_SPEED_SLOW 220
+#define TURN_SPEED_FAST 185
+#define FORWARD_SPEED_FAST 240
 
 #define ENA 5
 #define ENB 6
@@ -34,14 +36,35 @@
 int inp;
 int outp;
 int no_trans = 0;
+int forward_speed = FORWARD_SPEED_SLOW;
+int turn_speed = TURN_SPEED_SLOW;
+int swap = 0;
+
+int r_seen = 0;
+int center_seen = 0;
+int done_turning = 0;
 
 typedef enum {
-  LEFT, RIGHT, FORWARD, OFF_LINE, STOP, OFF_LINE_TRANS
+  LEFT, RIGHT, FORWARD, OFF_LINE, STOP, TURN, TO_GOAL
 } States_t;
 States_t state;
 
+void go() {
+  trans_forward();
+  state = TO_GOAL;
+  done_turning = 1;
+}
+
 void del() {
   no_trans = 0;
+}
+
+void swit() {
+  swap = 2;
+}
+
+void togoal() {
+  trans_forward();
 }
 
 void setup() {
@@ -118,8 +141,8 @@ void trans_forward() {
     state = FORWARD;
     //inp = analogRead(SPEEDPIN);
     //outp = map(inp, 0, 1024, 0, 255);
-    setleftmotorspeed(FORWARD_SPEED);
-    setrightmotorspeed(FORWARD_SPEED);
+    setleftmotorspeed(forward_speed);
+    setrightmotorspeed(forward_speed);
   }
 }
 
@@ -136,8 +159,8 @@ void trans_right() {
     state = RIGHT;
     //inp = analogRead(SPEEDPIN);
     //outp = map(inp, 0, 1024, -255, 255);
-    setleftmotorspeed(TURN_SPEED);
-    setrightmotorspeed(-TURN_SPEED);
+    setleftmotorspeed(turn_speed);
+    setrightmotorspeed(-turn_speed);
   }
 }
 
@@ -146,14 +169,16 @@ void trans_left() {
     state = LEFT;
     //inp = analogRead(SPEEDPIN);
     //outp = map(inp, 0, 1024, -255, 255);
-    setleftmotorspeed(-TURN_SPEED);
-    setrightmotorspeed(TURN_SPEED);
+    setleftmotorspeed(-turn_speed);
+    setrightmotorspeed(turn_speed);
   }
 }
 
 void trans_offline() {
   if (!no_trans) {
-    trans_stop();
+    turn_speed = TURN_SPEED_FAST;
+    forward_speed = FORWARD_SPEED_FAST;
+    trans_forward();
     state = OFF_LINE;
     ITimer2.setInterval(200, del, 201);
     no_trans = 1;
@@ -195,8 +220,32 @@ void loop() {
         }
       }
       break;
-    case OFF_LINE_TRANS:
+    case OFF_LINE:
+      if (!no_trans && analogRead(IRIN_MIDDLE) > MIDDLE_THRESH) {
+        center_seen = 1;
+      }
+      if (!no_trans && analogRead(IRIN_RIGHT) > RIGHT_THRESH) {
+        r_seen = 1;
+      }
+      if (!swap && center_seen && r_seen && analogRead(IRIN_MIDDLE) > MIDDLE_THRESH && analogRead(IRIN_RIGHT) > RIGHT_THRESH) {
+        ITimer2.setInterval(200, swit, 201);
+        swap = 1;
+      }
+      if (swap == 2) {
+        trans_left();
+      }
       break;
+    case TO_GOAL:
+      if (digitalRead(RIGHTBUMPER) && digitalRead(LEFTBUMPER) && done_turning) {
+        trans_stop();
+      }
+      break;
+    }
+  if (!done_turning && digitalRead(RIGHTBUMPER) && digitalRead(LEFTBUMPER)) {
+    setleftmotorspeed(-50);
+    setrightmotorspeed(-255);
+    state = TURN;
+    ITimer2.setInterval(400, go, 401);
   }
 
 }
