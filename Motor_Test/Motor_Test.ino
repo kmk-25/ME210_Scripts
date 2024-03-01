@@ -6,14 +6,14 @@
 
 #define ENA 5
 #define ENB 6
-#define IN1 12
-#define IN2 13
-#define IN3 8
-#define IN4 9
+#define IN1 8
+#define IN2 9
+#define IN3 12
+#define IN4 13
 
-#define SPEEDPIN A0
-#define BUTTONPIN 2
-#define RIGHTBUMPER 4
+#define SPEEDPIN A5
+#define BUTTONPIN 4
+#define RIGHTBUMPER 2
 #define LEFTBUMPER 3
 
 #define LEFTNOTINSYNC 0
@@ -49,10 +49,6 @@ void setup() {
   pinMode(BUTTONPIN, INPUT);
   pinMode(RIGHTBUMPER, INPUT);
   pinMode(LEFTBUMPER, INPUT);
-
-  digitalWrite(IN1, 1);
-  digitalWrite(IN2, 0);
-  digitalWrite(11, 0);
 
   Serial.begin(9600);
   while (!Serial);
