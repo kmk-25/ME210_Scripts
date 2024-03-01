@@ -43,6 +43,8 @@ int lookingforT = 0;
 int leftTseen = 0
 int rightTseen = 0;
 
+int done_turning = 0;
+
 int bumper_pressed = 0;
 
 typedef enum {
@@ -119,22 +121,6 @@ void turn() {
   state = TURN_TO_CONTACT;
 }
 
-void del() {
-  no_trans = 0;
-}
-
-void bumpered() {
-  bumper_pressed = 0;
-}
-
-void swit() {
-  swap = 2;
-}
-
-void togoal() {
-  trans_forward();
-}
-
 void checkforbumper() {
   if (digitalRead(RIGHTBUMPER) || digitalRead(LEFTBUMPER)) {
     state = STOP;
@@ -152,36 +138,28 @@ void bothpressed() {
 }
 
 void trans_forward() {
-  if (!no_trans) {
     state = FORWARD;
     setleftmotorspeed(forward_speed*LEFT_FACTOR);
     setrightmotorspeed(forward_speed);
-  }
 }
 
 void trans_stop() {
-  //if (!no_trans) {
     state = STOP;
     setleftmotorspeed(0);
     setrightmotorspeed(0);
-  //}
 }
 
 
 void trans_right() {
-  if (!no_trans) {
     state = RIGHT;
     setleftmotorspeed(turn_speed);
     setrightmotorspeed(-turn_speed);
-  }
 }
 
 void trans_left() {
-  if (!no_trans) {
     state = LEFT;
     setleftmotorspeed(-turn_speed);
     setrightmotorspeed(turn_speed);
-  }
 }
 
 void trans_offline() {
