@@ -40,7 +40,7 @@ int forward_speed = FORWARD_SPEED_SLOW;
 int turn_speed = TURN_SPEED_SLOW;
 
 int lookingforT = 0;
-int leftTseen = 0
+int leftTseen = 0;
 int rightTseen = 0;
 
 int done_turning = 0;
@@ -50,7 +50,7 @@ int bumper_pressed = 0;
 typedef enum {
   ORIENTATING, LEAVING_START, LEAVING_LEFTTURN, LEAVING_RIGHTTURN, 
   DETECTING_FIRSTTURN, LINEFOLLOW_LEFT, LINEFOLLOW_RIGHT, LINEFOLLOW_FORWARD, 
-  OFF_LINE, TURN_TO_CONTACT, BUMPERING, BUMPERING_FORWARD, TO_GOAL, STOP
+  T_LEFTTURN, T_RIGHTTURN, OFF_LINE, TURN_TO_CONTACT, BUMPERING, BUMPERING_FORWARD, TO_GOAL, STOP
 } States_t;
 States_t state;
 
@@ -93,7 +93,7 @@ void setrightmotorspeed(int speed) {
 }
 
 int lineseen(int pin) {
-  return analogRead(pin) > THRESHHOLD
+  return analogRead(pin) > THRESHHOLD;
 }
 
 void trans_leaving_start() {
@@ -108,6 +108,7 @@ void trans_firstturn(){
 void start_lookforT() {
   lookingforT = 1;
 }
+
 
 void turn() {
   if (digitalRead(DIRECTIONPIN)) {
@@ -128,6 +129,11 @@ void checkforbumper() {
     setrightmotorspeed(0);
   }
 }
+
+void bumpered() {
+  bumper_pressed = 0;
+}
+
 void bothpressed() {
   trans_stop();
   if (!done_turning) {
@@ -138,7 +144,7 @@ void bothpressed() {
 }
 
 void trans_forward() {
-    state = FORWARD;
+    state = LINEFOLLOW_FORWARD;
     setleftmotorspeed(forward_speed*LEFT_FACTOR);
     setrightmotorspeed(forward_speed);
 }
@@ -151,13 +157,13 @@ void trans_stop() {
 
 
 void trans_right() {
-    state = RIGHT;
+    state = LINEFOLLOW_RIGHT;
     setleftmotorspeed(turn_speed);
     setrightmotorspeed(-turn_speed);
 }
 
 void trans_left() {
-    state = LEFT;
+    state = LINEFOLLOW_LEFT;
     setleftmotorspeed(-turn_speed);
     setrightmotorspeed(turn_speed);
 }
@@ -187,7 +193,7 @@ void check_bumper() {
       ITimer2.setInterval(200, bumpered, 201);
     }
   }
-  if (digitalRead(LEFTBUMPER) && state != TURN && state != STOP) {
+  if (digitalRead(LEFTBUMPER) && state != TURN_TO_CONTACT && state != STOP) {
     if (bumper_pressed==2) {
       bothpressed();
     }
@@ -206,12 +212,12 @@ void check_T() {
     if (lineseen(IRIN_LEFT)) {
       setleftmotorspeed(0);
       setrightmotorspeed(turn_speed);
-      state = T_LEFTTURN
+      state = T_LEFTTURN;
     }
     if (lineseen(IRIN_RIGHT)) {
       setleftmotorspeed(turn_speed);
       setrightmotorspeed(0);
-      state = T_RIGHTTURN
+      state = T_RIGHTTURN;
     }
   }
 }
@@ -230,10 +236,10 @@ void setup() {
   pinMode(LEFTBUMPER, INPUT);
 
   delay(1000);
-  state = SPINNING;
+  //state = SPINNING;
   //setleftmotorspeed(-255);
   //setrightmotorspeed(255);
-  trans_forward();
+  trans_leaving_start();
 }
 
 void loop() {
@@ -247,88 +253,76 @@ void loop() {
     case LEAVING_START:
       if (lineseen(IRIN_LEFT)) {
         setleftmotorspeed(0);
-        state = LEAVING_LEFTTURN
+        state = LEAVING_LEFTTURN;
       }
       if (lineseen(IRIN_RIGHT)) {
         setrightmotorspeed(0);
-        state = LEAVING_RIGHTTURN
+        state = LEAVING_RIGHTTURN;
       }
       break;
     case LEAVING_LEFTTURN:
       if (lineseen(IRIN_RIGHT)) {
         trans_forward();
         state = STOP;
-        ITimer2.setInterval(trans_firstturn, 500, 501);
+        ITimer2.setInterval(500, trans_firstturn, 501);
       }
       break;
     case LEAVING_RIGHTTURN:
       if (lineseen(IRIN_LEFT)) {
         trans_forward();
         state = STOP;
-        ITimer2.setInterval(trans_firstturn, 500, 501);
+        ITimer2.setInterval(500, trans_firstturn, 501);
       }
       break;
     case DETECTING_FIRSTTURN:
       if (digitalRead(DIRECTIONPIN) && (lineseen(IRIN_MIDDLE_LEFT) || lineseen(IRIN_LEFT))) {
         trans_left();
-        ITimer2.setInterval(lookforT, 500, 501)
+        ITimer2.setInterval(500,start_lookforT, 501);
       }
       if (!digitalRead(DIRECTIONPIN) && (lineseen(IRIN_MIDDLE_RIGHT) || lineseen(IRIN_RIGHT))) {
         trans_right();
-        ITimer2.setInterval(lookforT, 500, 501)
+        ITimer2.setInterval(500, start_lookforT, 501);
       }
-    case FORWARD:
+    case LINEFOLLOW_FORWARD:
       check_T();
       check_bumper();
-      if (analogRead(IRIN_RIGHT) > RIGHT_THRESH) {
+      if (lineseen(IRIN_MIDDLE_RIGHT)) {
         trans_right();
       }
-      if (analogRead(IRIN_LEFT) > LEFT_THRESH) {
+      if (lineseen(IRIN_MIDDLE_LEFT)) {
         trans_left();
       }
       break;
-    case LEFT:
+    case LINEFOLLOW_LEFT:
       check_T();
       check_bumper();
-      if (lookingforT) {
-        if (lineseen(IRIN_LEFT)) {
-          setleftmotorspeed(0);
-          setrightmotorspeed(turn_speed);
-          state = T_LEFTTURN
-        }
-        if (lineseen(IRIN_RIGHT)) {
-          setleftmotorspeed(turn_speed);
-          setrightmotorspeed(0);
-          state = T_RIGHTTURN
-        }
-      }
-      if (analogRead(IRIN_MIDDLE) > MIDDLE_THRESH) {
+      if (lineseen(IRIN_MIDDLE)) {
         trans_forward();
       }
       break;
-    case RIGHT:
+    case LINEFOLLOW_RIGHT:
       check_T();
       check_bumper();
-      if (analogRead(IRIN_MIDDLE) > MIDDLE_THRESH) {
+      if (lineseen(IRIN_MIDDLE)) {
         trans_forward();
       }
       break;
     case T_LEFTTURN:
       if (lineseen(IRIN_RIGHT)) {
-        leftTseen = 0
+        leftTseen = 0;
         rightTseen = 0;
         trans_forward();
         state = STOP;
-        ITimer2.setInterval(trans_offline, 500, 501);
+        ITimer2.setInterval(500, trans_offline, 501);
       }
       break;
     case T_RIGHTTURN:
       if (lineseen(IRIN_LEFT)) {
-        leftTseen = 0
+        leftTseen = 0;
         rightTseen = 0;
         trans_forward();
         state = STOP;
-        ITimer2.setInterval(trans_offline, 500, 501);
+        ITimer2.setInterval(500, trans_offline, 501);
       }
       break;
     case OFF_LINE:
@@ -337,10 +331,10 @@ void loop() {
           leftTseen = 0;
           state = STOP;
           if (digitalRead(DIRECTIONPIN)) {
-            ITimer2.setInterval(200, trans_right, 201)
+            ITimer2.setInterval(200, trans_right, 201);
           }
           else{
-            ITimer2.setInterval(200, trans_left, 201)
+            ITimer2.setInterval(200, trans_left, 201);
           }
         }
         else {
@@ -352,10 +346,10 @@ void loop() {
           rightTseen = 0;
           state = STOP;
           if (digitalRead(DIRECTIONPIN)) {
-            ITimer2.setInterval(200, trans_right, 201)
+            ITimer2.setInterval(200, trans_right, 201);
           }
           else{
-            ITimer2.setInterval(200, trans_left, 201)
+            ITimer2.setInterval(200, trans_left, 201);
           }
         }
         else {

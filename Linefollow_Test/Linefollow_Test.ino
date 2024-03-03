@@ -24,10 +24,10 @@
 #define LEFTNOTINSYNC 0
 #define RIGHTNOTINSYNC 0
 
-#define IRIN_RIGHT A0
+#define IRIN_RIGHT A2
 #define IRIN_MIDDLE_LEFT A3
 #define IRIN_MIDDLE_RIGHT A4
-#define IRIN_MIDDLE A2
+#define IRIN_MIDDLE A0
 #define IRIN_LEFT A1
 
 #define LEFT_THRESH 500
@@ -108,9 +108,9 @@ void setup() {
 
   delay(1000);
   state = SPINNING;
-  //setleftmotorspeed(-255);
-  //setrightmotorspeed(255);
-  trans_forward();
+  setleftmotorspeed(-255);
+  setrightmotorspeed(255);
+  //trans_forward();
 }
 
 void setleftmotorspeed(int speed) {
@@ -214,7 +214,7 @@ void trans_offline() {
 void loop() {
   switch (state) {
     case FORWARD:
-      if (analogRead(IRIN_RIGHT) > RIGHT_THRESH) {
+      if (!no_trans && analogRead(IRIN_RIGHT) > RIGHT_THRESH) {
         trans_right();
       }
       if (analogRead(IRIN_LEFT) > LEFT_THRESH) {
@@ -222,12 +222,12 @@ void loop() {
       }
       break;
     case LEFT:
-      if (analogRead(IRIN_MIDDLE) > MIDDLE_THRESH) {
+      if (!no_trans && analogRead(IRIN_MIDDLE) > MIDDLE_THRESH) {
         trans_forward();
       }
       break;
     case RIGHT:
-      if (analogRead(IRIN_MIDDLE) > MIDDLE_THRESH) {
+      if (!no_trans && analogRead(IRIN_MIDDLE) > MIDDLE_THRESH) {
         trans_forward();
       }
       break;
@@ -300,7 +300,7 @@ void loop() {
       setleftmotorspeed(-255);
       state = BUMPERING;
       bumper_pressed = 1;
-      ITimer2.setInterval(200, bumpered, 201);
+      ITimer2.setInterval(400, bumpered, 401);
     }
   }
 }
