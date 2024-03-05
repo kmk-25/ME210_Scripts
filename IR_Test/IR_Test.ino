@@ -5,11 +5,12 @@
 
 #include <TimerInterrupt.h>         //https://github.com/khoih-prog/TimerInterrupt
 
-#define IRIN_RIGHT A2
-#define IRIN_MIDDLE_LEFT A3
-#define IRIN_MIDDLE_RIGHT A4
-#define IRIN_MIDDLE A0
-#define IRIN_LEFT A1
+
+#define IRIN_RIGHT A4
+#define IRIN_MIDDLE_LEFT A2
+#define IRIN_MIDDLE_RIGHT A0
+#define IRIN_MIDDLE A1
+#define IRIN_LEFT A3
 
 void setup() {
   // put your setup code here, to run once:
@@ -25,7 +26,7 @@ void setup() {
 }
 
 void printir() {
-  Serial.println(analogRead(IRIN_MIDDLE));
+  Serial.println(analogRead(IRIN_LEFT));
 }
 void loop() {
 
