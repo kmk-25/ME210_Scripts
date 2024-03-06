@@ -399,13 +399,16 @@ void setup() {
   //setrightmotorspeed(150);
 
   state = ORIENTATING;
-  if (!DIRECTIONPIN) {
+  if (!digitalRead(DIRECTIONPIN)) {
     setleftmotorspeed(150);
     setrightmotorspeed(-150);
   }
-  if (DIRECTIONPIN) {
+  if (digitalRead(DIRECTIONPIN)) {
     setleftmotorspeed(-150);
     setrightmotorspeed(150);
+  }
+  if (digitalRead(BUTTONPIN)) {
+    delay(400);
   }
   //trans_leaving_start();
 }
@@ -419,11 +422,6 @@ void loop() {
         trans_stop();
         ITimer2.setInterval(500, trans_leaving_start, 501);
       }
-      break;
-    case ORIENTATING_NEW:
-      ITimer2.setInterval(2, checkultrasonic, 3);
-      delay(400);
-      trans_leaving_start();
       break;
     case LEAVING_START:
       if (lineseen(IRIN_LEFT)) {
@@ -557,7 +555,7 @@ void loop() {
         setleftmotorspeed(255);
         setrightmotorspeed(-255);
       }
-      delay(830);
+      delay(840);
       trans_stop();
       ITimer2.setInterval(500, trans_togoal, 501);
       break;
