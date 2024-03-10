@@ -40,7 +40,6 @@ void loop() {
       delay(700);
       send();
     }
-    delay(1000);
-    //Serial.println(uS);
+    delay(100);
   }
 }

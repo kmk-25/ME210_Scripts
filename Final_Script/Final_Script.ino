@@ -3,8 +3,8 @@
 
 #define USE_TIMER_2     true
 
-#define TURN_SPEED_SLOW 200
-#define FORWARD_SPEED_SLOW 200
+#define TURN_SPEED_SLOW 255
+#define FORWARD_SPEED_SLOW 255
 #define TURN_SPEED_FAST 255
 #define FORWARD_SPEED_FAST 255
 #define LEFT_FACTOR 1
@@ -40,10 +40,8 @@
 
 #include <TimerInterrupt.h>         //https://github.com/khoih-prog/TimerInterrupt
 #include <Servo.h>
-//#include <NewPing.h>
 
 // Create the servo object
-// Servo myservo;
 Servo myservo;
 Servo myservo_c;
 
@@ -108,14 +106,6 @@ void setrightmotorspeed(int speed) {
 
 int lineseen(int pin) {
   return analogRead(pin) > THRESHHOLD;
-}
-
-void checkultrasonic() {
-  // unsigned int dist = sonar.ping();
-  // dist = sonar.convert_cm(dist);
-  // if (dist > 105) {
-  //   state = ORIENTATING_NEW;
-  // }
 }
 
 void trans_leaving_start() {
@@ -256,120 +246,48 @@ void check_T() {
   }
 }
 
-// void servoturn(int start, int end, float d, Servo myservo_c) {
-//   if (start > 180) {
-//     start = 180;
-//   }
-//   if (start < 0) {
-//     start = 0;
-//   }
-//   if (end > 180) {
-//     end = 180;
-//   }
-//   if (end < 0) {
-//     end = 0;
-//   }
-//   if (start > end) {
-//     for (int pos_c = start; pos_c >= end; pos_c-= 1) {
-//       myservo_c.write(pos_c);
-//       delay(d);
-//     }
-//   }
-//   else {
-//     for (int pos_c = start; pos_c <= end; pos_c+= 1) {
-//       myservo_c.write(pos_c);
-//       delay(d);
-//     }
-//   }
-// }
-
-// void contact_hitter() {
-//   servoturn(180, 90, 7.5, servo_flag);
-//   delay(1000);
-//   servoturn(90, 180, 7.5, servo_flag);
-// }
-
-// void celebration() {
-//   servoturn(180, 0, 2.75, servo_flag);
-//   servoturn(0, 180, 2.75, servo_flag);
-// }
-
-// void move_ball() {
-//   for (int i = 0; i <3; i++) {
-//     servoturn(90+30*i*(2*digitalRead(DIRECTIONPIN)-1), 90+30*(i+1)*(2*digitalRead(DIRECTIONPIN)-1), 15, servo_balldrop);
-//     delay(1000);
-//   }
-// }
+void slowturn(int startpos, int endpos, Servo servo, float delaytime) {
+  if (startpos > 180) {
+    startpos = 180;
+  }
+  if (startpos < 0) {
+    startpos = 0;
+  }
+  if (endpos > 180) {
+    endpos = 180;
+  }
+  if (endpos < 0) {
+    endpos = 0;
+  }
+  if (startpos < endpos) {
+    for (int p = startpos; p < endpos; p++) {
+      servo.write(p);
+      delay(delaytime);
+    }
+  }
+  else {
+    for (int p = startpos; p > endpos; p -= 1) {
+      servo.write(p);
+      delay(delaytime);
+    }
+  }
+}
 
 void contact_hitter() {
-  for (pos_c = 180; pos_c >= 90; pos_c-= 1) {
-    myservo_c.write(pos_c);
-    // Serial.println(pos);
-    delay(7.5);
-  }
-  delay(1000);
-  for (pos_c = 90; pos_c <= 180; pos_c+= 1) {
-    myservo_c.write(pos_c);
-    // Serial.println(pos);
-    delay(7.5);
-  }
+  slowturn(0, 180, myservo_c, 2.75);
 }
 
 void celebration() {
-  for (pos_c = 180; pos_c >= 0; pos_c -= 1) {
-    myservo_c.write(pos_c);
-    // Serial.println(pos);
-    delay(2.75);
-  }
- 
-  for (pos_c = 0; pos_c <= 180; pos_c += 1) {
-    myservo_c.write(pos_c);
-    // Serial.println(pos);
-    delay(2.75);
-
-  }
+  slowturn(180, 0, myservo_c, 2.75);
+  slowturn(0, 180, myservo_c, 2.75);
 }
 
 void move_ball() {
-  if (digitalRead(DIRECTIONPIN)) {
-    for (pos = 90; pos >= 60; pos-= 1) {
-      myservo.write(pos);
-      // Serial.println(pos);
-      delay(15);
-    }
-    delay(1000);
-    for (pos = 60; pos >= 30; pos-= 1) {
-      myservo.write(pos);
-      // Serial.println(pos);
-      delay(15);
-    }
-    delay(1000);
-    for (pos = 30; pos >= 0; pos-= 1) {
-      myservo.write(pos);
-      // Serial.println(pos);
-      delay(15);
-    }
-    delay(1000);
-  }
-  else {
-    for (pos = 90; pos <= 120; pos+= 1) {
-      myservo.write(pos);
-      // Serial.println(pos);
-      delay(15);
-    }
-    delay(1000);
-    for (pos = 120; pos <= 150; pos+= 1) {
-      myservo.write(pos);
-      // Serial.println(pos);
-      delay(15);
-    }
-    delay(1000);
-    for (pos = 150; pos <= 180; pos+= 1) {
-      myservo.write(pos);
-      // Serial.println(pos);
-      delay(15);
-    }
-  }
+  int direction = -digitalRead(DIRECTIONPIN)*2+1;
+  for (int curhole = 0; curhole < 3; curhole++){
+    slowturn(90+direction*30*curhole, 90+direction*30*(curhole+1), myservo, 15);
+  delay(100);
+  } 
 }
 
 void setup() {
@@ -392,7 +310,6 @@ void setup() {
 
   myservo.write(90);
   myservo_c.write(0);
-  delay(2000);
 
   //state = TEST;
   //setleftmotorspeed(150);
@@ -546,7 +463,7 @@ void loop() {
       }
       break;
     case TURN_TO_CONTACT:
-      delay(110);
+      delay(120);
       if (!digitalRead(DIRECTIONPIN)) {
         setleftmotorspeed(-255);
         setrightmotorspeed(255);
@@ -555,9 +472,10 @@ void loop() {
         setleftmotorspeed(255);
         setrightmotorspeed(-255);
       }
-      delay(840);
-      trans_stop();
-      ITimer2.setInterval(500, trans_togoal, 501);
+      delay(860);
+      trans_togoal();
+      //trans_stop();
+      //ITimer2.setInterval(500, trans_togoal, 501);
       break;
     case TO_GOAL:
       check_bumper();
