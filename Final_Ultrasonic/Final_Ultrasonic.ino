@@ -21,7 +21,6 @@ void send() {
 }
 
 void setup() {
-  // put your setup code here, to run once:
   Serial.begin(9600);
   while (!Serial);
   ITimer1.init();
@@ -32,6 +31,10 @@ void setup() {
 }
 
 void loop() {
+  //This just pings the ultrasonic sensor once every 100 mS, then
+  //sets the output pin high if the distance detected is in the desired range.
+  //The desired range corresponds to the ropot facing towards the gap in the wall,
+  //and the 700 mS delay gives the robot time to rotate to the line.
   if (state == PINGING) {
     unsigned int uS = sonar.ping();
     uS = sonar.convert_cm(uS);

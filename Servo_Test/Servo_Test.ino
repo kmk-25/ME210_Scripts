@@ -46,7 +46,9 @@ void setup() {
   myservo.write(90);
   myservo_c.write(0);
   delay(5000);
-  move_ball();
+  contact_hitter();
+  delay(100);
+  celebration();
 }
 
 // Loop to keep the motor turning!
