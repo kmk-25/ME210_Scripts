@@ -1,6 +1,6 @@
 # Stanford ME210 Final Project Codebase
 
-This is code developed in collaboration with Pierre Labroche. It drives a robot built for the Stanford class ME210.
+This is code developed in collaboration with Pierre Labroche. It drives a robot built for the Stanford class ME210. See https://khuyen00nguyen.wixsite.com/me210 for details.
 ### Scripts:
 
 - IR_Test: Script for testing and calibrating IR sensors. When connected to a computer, it continuously prints the read value so the sensors can be adjusted to maximize response
